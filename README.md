@@ -30,22 +30,34 @@ A Metadata Change Proposal (MCP) server for retrieving MySQL database schema inf
 
 ### Docker Setup
 
-1. Clone this repository
-2. Make sure Docker and Docker Compose are installed on your system
-3. Run the server with MySQL using Docker Compose:
-   ```
-   docker-compose up
-   ```
-   
-   This will:
-   - Build the MCP server Docker image
-   - Start a MySQL container
-   - Connect the MCP server to the MySQL container
-   - Expose the MCP server on port 8000
+#### Building and Running the Docker Image
 
-4. Optionally, you can set environment variables before running Docker Compose:
+1. Clone this repository
+2. Build the Docker image:
    ```
-   MYSQL_USER=custom_user MYSQL_PASSWORD=custom_password MYSQL_DATABASE=custom_db docker-compose up
+   docker build -t mysql-mcp-server .
+   ```
+3. Run the Docker container with environment variables for MySQL connection:
+   ```
+   docker run -p 8000:8000 \
+     -e MYSQL_HOST=host.docker.internal \
+     -e MYSQL_PORT=3306 \
+     -e MYSQL_USER=your_username \
+     -e MYSQL_PASSWORD=your_password \
+     -e MYSQL_DATABASE=information_schema \
+     mysql-mcp-server
+   ```
+
+   Note: `host.docker.internal` is used to connect to the MySQL instance running on your host machine from inside the Docker container.
+
+4. For Mac and Windows, `host.docker.internal` resolves to the host machine. For Linux, you may need to use:
+   ```
+   docker run -p 8000:8000 \
+     --add-host=host.docker.internal:host-gateway \
+     -e MYSQL_HOST=host.docker.internal \
+     -e MYSQL_USER=your_username \
+     -e MYSQL_PASSWORD=your_password \
+     mysql-mcp-server
    ```
 
 ## Usage
@@ -59,19 +71,20 @@ python main.py
 
 ### Docker Usage
 
-Start the server with MySQL:
+Run the Docker container (as shown in the setup section):
 ```
-docker-compose up
+docker run -p 8000:8000 \
+  -e MYSQL_HOST=host.docker.internal \
+  -e MYSQL_USER=your_username \
+  -e MYSQL_PASSWORD=your_password \
+  mysql-mcp-server
 ```
 
-Start in detached mode:
+You can also create a `.env` file and mount it to the container:
 ```
-docker-compose up -d
-```
-
-Stop the containers:
-```
-docker-compose down
+docker run -p 8000:8000 \
+  -v $(pwd)/.env:/app/.env \
+  mysql-mcp-server
 ```
 
 ### Available Tools
