@@ -12,6 +12,8 @@ A Metadata Change Proposal (MCP) server for retrieving MySQL database schema inf
 
 ## Setup
 
+### Local Setup
+
 1. Clone this repository
 2. Install dependencies:
    ```
@@ -26,12 +28,66 @@ A Metadata Change Proposal (MCP) server for retrieving MySQL database schema inf
    MYSQL_DATABASE=information_schema
    ```
 
+### Docker Setup
+
+#### Building and Running the Docker Image
+
+1. Clone this repository
+2. Build the Docker image:
+   ```
+   docker build -t mysql-mcp-server .
+   ```
+3. Run the Docker container with environment variables for MySQL connection:
+   ```
+   docker run -p 8000:8000 \
+     -e MYSQL_HOST=host.docker.internal \
+     -e MYSQL_PORT=3306 \
+     -e MYSQL_USER=your_username \
+     -e MYSQL_PASSWORD=your_password \
+     -e MYSQL_DATABASE=information_schema \
+     mysql-mcp-server
+   ```
+
+   Note: `host.docker.internal` is used to connect to the MySQL instance running on your host machine from inside the Docker container.
+
+4. For Mac and Windows, `host.docker.internal` resolves to the host machine. For Linux, you may need to use:
+   ```
+   docker run -p 8000:8000 \
+     --add-host=host.docker.internal:host-gateway \
+     -e MYSQL_HOST=host.docker.internal \
+     -e MYSQL_USER=your_username \
+     -e MYSQL_PASSWORD=your_password \
+     mysql-mcp-server
+   ```
+
 ## Usage
+
+### Local Usage
 
 Start the server:
 ```
 python main.py
 ```
+
+### Docker Usage
+
+Run the Docker container (as shown in the setup section):
+```
+docker run -p 8000:8000 \
+  -e MYSQL_HOST=host.docker.internal \
+  -e MYSQL_USER=your_username \
+  -e MYSQL_PASSWORD=your_password \
+  mysql-mcp-server
+```
+
+You can also create a `.env` file and mount it to the container:
+```
+docker run -p 8000:8000 \
+  -v $(pwd)/.env:/app/.env \
+  mysql-mcp-server
+```
+
+### Available Tools
 
 The server provides the following tools:
 - `databases`: List all databases
