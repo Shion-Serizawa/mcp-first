@@ -12,6 +12,8 @@ A Metadata Change Proposal (MCP) server for retrieving MySQL database schema inf
 
 ## Setup
 
+### Local Setup
+
 1. Clone this repository
 2. Install dependencies:
    ```
@@ -26,12 +28,53 @@ A Metadata Change Proposal (MCP) server for retrieving MySQL database schema inf
    MYSQL_DATABASE=information_schema
    ```
 
+### Docker Setup
+
+1. Clone this repository
+2. Make sure Docker and Docker Compose are installed on your system
+3. Run the server with MySQL using Docker Compose:
+   ```
+   docker-compose up
+   ```
+   
+   This will:
+   - Build the MCP server Docker image
+   - Start a MySQL container
+   - Connect the MCP server to the MySQL container
+   - Expose the MCP server on port 8000
+
+4. Optionally, you can set environment variables before running Docker Compose:
+   ```
+   MYSQL_USER=custom_user MYSQL_PASSWORD=custom_password MYSQL_DATABASE=custom_db docker-compose up
+   ```
+
 ## Usage
+
+### Local Usage
 
 Start the server:
 ```
 python main.py
 ```
+
+### Docker Usage
+
+Start the server with MySQL:
+```
+docker-compose up
+```
+
+Start in detached mode:
+```
+docker-compose up -d
+```
+
+Stop the containers:
+```
+docker-compose down
+```
+
+### Available Tools
 
 The server provides the following tools:
 - `databases`: List all databases
