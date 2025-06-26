@@ -171,9 +171,7 @@ To use this MCP server with MCP-compatible clients, you'll need to configure the
 The server provides the following tools:
 - `databases`: List all databases
 - `tables`: List all tables in a database
-- `schema`: Get the schema (columns) for a specific table
-- `indexes`: Get the indexes for a specific table
-- `foreign_keys`: Get the foreign keys for a specific table
+- `schema`: Get the schema (columns, indexes, and foreign keys) for one or more tables.
 
 ## Example
 
@@ -190,7 +188,10 @@ databases = client.databases()
 tables = client.tables(database="your_database")
 
 # Get schema for a specific table
-schema = client.schema(table="your_table", database="your_database")
+schema = client.schema(tables=["your_table"], database="your_database")
+
+# Get schema for multiple tables
+schemas = client.schema(tables=["table1", "table2"], database="your_database")
 
 # Get indexes for a specific table
 indexes = client.indexes(table="your_table", database="your_database")

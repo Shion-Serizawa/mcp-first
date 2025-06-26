@@ -46,10 +46,14 @@ def get_tables(database: Optional[str] = None) -> List[Dict[str, Any]]:
     return execute_query(query, params)
 
 
-def get_columns(table: str, database: Optional[str] = None) -> List[Dict[str, Any]]:
-    """Get columns for a specific table."""
-    params = {"table": table}
-    query = """
+def get_columns(tables: list[str], database: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Get columns for specific tables."""
+    if not tables:
+        return []
+    
+    params = {}
+    placeholders = ", ".join(["%s"] * len(tables))
+    query = f"""
     SELECT
         TABLE_SCHEMA,
         TABLE_NAME,
@@ -68,22 +72,28 @@ def get_columns(table: str, database: Optional[str] = None) -> List[Dict[str, An
     FROM
         INFORMATION_SCHEMA.COLUMNS
     WHERE
-        TABLE_NAME = %(table)s
+        TABLE_NAME IN ({placeholders})
     """
     
+    params = tables
+    
     if database:
-        query += " AND TABLE_SCHEMA = %(database)s"
-        params["database"] = database
+        query += " AND TABLE_SCHEMA = %s"
+        params.append(database)
         
-    query += " ORDER BY ORDINAL_POSITION"
+    query += " ORDER BY TABLE_NAME, ORDINAL_POSITION"
     
     return execute_query(query, params)
 
 
-def get_indexes(table: str, database: Optional[str] = None) -> List[Dict[str, Any]]:
-    """Get indexes for a specific table."""
-    params = {"table": table}
-    query = """
+def get_indexes(tables: list[str], database: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Get indexes for specific tables."""
+    if not tables:
+        return []
+
+    params = {}
+    placeholders = ", ".join(["%s"] * len(tables))
+    query = f"""
     SELECT
         TABLE_SCHEMA,
         TABLE_NAME,
@@ -97,22 +107,28 @@ def get_indexes(table: str, database: Optional[str] = None) -> List[Dict[str, An
     FROM
         INFORMATION_SCHEMA.STATISTICS
     WHERE
-        TABLE_NAME = %(table)s
+        TABLE_NAME IN ({placeholders})
     """
     
+    params = tables
+
     if database:
-        query += " AND TABLE_SCHEMA = %(database)s"
-        params["database"] = database
+        query += " AND TABLE_SCHEMA = %s"
+        params.append(database)
         
-    query += " ORDER BY INDEX_NAME, SEQ_IN_INDEX"
+    query += " ORDER BY TABLE_NAME, INDEX_NAME, SEQ_IN_INDEX"
     
     return execute_query(query, params)
 
 
-def get_foreign_keys(table: str, database: Optional[str] = None) -> List[Dict[str, Any]]:
-    """Get foreign keys for a specific table."""
-    params = {"table": table}
-    query = """
+def get_foreign_keys(tables: list[str], database: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Get foreign keys for specific tables."""
+    if not tables:
+        return []
+
+    params = {}
+    placeholders = ", ".join(["%s"] * len(tables))
+    query = f"""
     SELECT
         kcu.CONSTRAINT_NAME,
         kcu.TABLE_SCHEMA,
@@ -131,14 +147,36 @@ def get_foreign_keys(table: str, database: Optional[str] = None) -> List[Dict[st
         kcu.CONSTRAINT_NAME = rc.CONSTRAINT_NAME AND
         kcu.TABLE_SCHEMA = rc.CONSTRAINT_SCHEMA
     WHERE
-        kcu.TABLE_NAME = %(table)s
+        kcu.TABLE_NAME IN ({placeholders})
         AND kcu.REFERENCED_TABLE_NAME IS NOT NULL
     """
     
+    params = tables
+
     if database:
-        query += " AND kcu.TABLE_SCHEMA = %(database)s"
-        params["database"] = database
+        query += " AND kcu.TABLE_SCHEMA = %s"
+        params.append(database)
         
-    query += " ORDER BY kcu.CONSTRAINT_NAME"
+    query += " ORDER BY kcu.TABLE_NAME, kcu.CONSTRAINT_NAME"
     
     return execute_query(query, params)
+
+
+def get_table_schema(tables: list[str], database: Optional[str] = None) -> Dict[str, Any]:
+    """Get the full schema for multiple tables, including columns, indexes, and foreign keys."""
+    columns = get_columns(tables, database)
+    indexes = get_indexes(tables, database)
+    foreign_keys = get_foreign_keys(tables, database)
+    
+    schema_by_table = {table: {"columns": [], "indexes": [], "foreign_keys": []} for table in tables}
+    
+    for col in columns:
+        schema_by_table[col["TABLE_NAME"]]["columns"].append(col)
+        
+    for idx in indexes:
+        schema_by_table[idx["TABLE_NAME"]]["indexes"].append(idx)
+        
+    for fk in foreign_keys:
+        schema_by_table[fk["TABLE_NAME"]]["foreign_keys"].append(fk)
+        
+    return schema_by_table

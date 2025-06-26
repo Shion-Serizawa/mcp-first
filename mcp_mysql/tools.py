@@ -9,6 +9,7 @@ from .schema import (
     get_columns,
     get_indexes,
     get_foreign_keys,
+    get_table_schema as get_table_schema_from_db,
 )
 
 
@@ -163,12 +164,20 @@ def list_tables(database: Optional[str] = Field(None, description="Database name
 
 
 def get_table_schema(
-    table: str = Field(..., description="Table name"),
+    tables: list[str] = Field(..., description="List of table names"),
     database: Optional[str] = Field(None, description="Database name"),
-) -> List[ColumnInfo]:
-    """Get the schema (columns) for a specific table."""
-    columns = get_columns(table, database)
-    return [ColumnInfo.from_db_row(col) for col in columns]
+) -> Dict[str, "TableSchema"]:
+    """Get the full schema for multiple tables."""
+    schema_data = get_table_schema_from_db(tables, database)
+    
+    result = {}
+    for table_name, data in schema_data.items():
+        result[table_name] = TableSchema(
+            columns=[ColumnInfo.from_db_row(col) for col in data["columns"]],
+            indexes=[IndexInfo.from_db_row(idx) for idx in data["indexes"]],
+            foreign_keys=[ForeignKeyInfo.from_db_row(fk) for fk in data["foreign_keys"]],
+        )
+    return result
 
 
 def get_table_indexes(
