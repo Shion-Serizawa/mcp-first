@@ -52,7 +52,7 @@ def get_columns(tables: list[str], database: Optional[str] = None) -> List[Dict[
         return []
     
     params = {}
-    placeholders = ", ".join(["%s"] * len(tables))
+    placeholders = ", ".join([f"%(table_{i})s" for i in range(len(tables))])
     query = f"""
     SELECT
         TABLE_SCHEMA,
@@ -75,11 +75,12 @@ def get_columns(tables: list[str], database: Optional[str] = None) -> List[Dict[
         TABLE_NAME IN ({placeholders})
     """
     
-    params = tables
+    for i, table in enumerate(tables):
+        params[f"table_{i}"] = table
     
     if database:
-        query += " AND TABLE_SCHEMA = %s"
-        params.append(database)
+        query += " AND TABLE_SCHEMA = %(database)s"
+        params["database"] = database
         
     query += " ORDER BY TABLE_NAME, ORDINAL_POSITION"
     
@@ -92,7 +93,7 @@ def get_indexes(tables: list[str], database: Optional[str] = None) -> List[Dict[
         return []
 
     params = {}
-    placeholders = ", ".join(["%s"] * len(tables))
+    placeholders = ", ".join([f"%(table_{i})s" for i in range(len(tables))])
     query = f"""
     SELECT
         TABLE_SCHEMA,
@@ -110,11 +111,12 @@ def get_indexes(tables: list[str], database: Optional[str] = None) -> List[Dict[
         TABLE_NAME IN ({placeholders})
     """
     
-    params = tables
+    for i, table in enumerate(tables):
+        params[f"table_{i}"] = table
 
     if database:
-        query += " AND TABLE_SCHEMA = %s"
-        params.append(database)
+        query += " AND TABLE_SCHEMA = %(database)s"
+        params["database"] = database
         
     query += " ORDER BY TABLE_NAME, INDEX_NAME, SEQ_IN_INDEX"
     
@@ -127,7 +129,7 @@ def get_foreign_keys(tables: list[str], database: Optional[str] = None) -> List[
         return []
 
     params = {}
-    placeholders = ", ".join(["%s"] * len(tables))
+    placeholders = ", ".join([f"%(table_{i})s" for i in range(len(tables))])
     query = f"""
     SELECT
         kcu.CONSTRAINT_NAME,
@@ -151,11 +153,12 @@ def get_foreign_keys(tables: list[str], database: Optional[str] = None) -> List[
         AND kcu.REFERENCED_TABLE_NAME IS NOT NULL
     """
     
-    params = tables
+    for i, table in enumerate(tables):
+        params[f"table_{i}"] = table
 
     if database:
-        query += " AND kcu.TABLE_SCHEMA = %s"
-        params.append(database)
+        query += " AND kcu.TABLE_SCHEMA = %(database)s"
+        params["database"] = database
         
     query += " ORDER BY kcu.TABLE_NAME, kcu.CONSTRAINT_NAME"
     

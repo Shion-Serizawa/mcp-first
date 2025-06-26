@@ -151,6 +151,13 @@ class ForeignKeyInfo(BaseModel):
         )
 
 
+class TableSchema(BaseModel):
+    """Complete table schema including columns, indexes, and foreign keys."""
+    columns: List[ColumnInfo]
+    indexes: List[IndexInfo]
+    foreign_keys: List[ForeignKeyInfo]
+
+
 def list_databases() -> List[DatabaseInfo]:
     """List all databases in the MySQL server."""
     db_list = get_databases()
@@ -185,7 +192,7 @@ def get_table_indexes(
     database: Optional[str] = Field(None, description="Database name"),
 ) -> List[IndexInfo]:
     """Get the indexes for a specific table."""
-    indexes = get_indexes(table, database)
+    indexes = get_indexes([table], database)
     return [IndexInfo.from_db_row(idx) for idx in indexes]
 
 
@@ -194,5 +201,5 @@ def get_table_foreign_keys(
     database: Optional[str] = Field(None, description="Database name"),
 ) -> List[ForeignKeyInfo]:
     """Get the foreign keys for a specific table."""
-    foreign_keys = get_foreign_keys(table, database)
+    foreign_keys = get_foreign_keys([table], database)
     return [ForeignKeyInfo.from_db_row(fk) for fk in foreign_keys]
