@@ -9,6 +9,7 @@ from .schema import (
     get_columns,
     get_indexes,
     get_foreign_keys,
+    get_table_schema as get_table_schema_from_db,
 )
 
 
@@ -150,6 +151,13 @@ class ForeignKeyInfo(BaseModel):
         )
 
 
+class TableSchema(BaseModel):
+    """Complete table schema including columns, indexes, and foreign keys."""
+    columns: List[ColumnInfo]
+    indexes: List[IndexInfo]
+    foreign_keys: List[ForeignKeyInfo]
+
+
 def list_databases() -> List[DatabaseInfo]:
     """List all databases in the MySQL server."""
     db_list = get_databases()
@@ -163,12 +171,20 @@ def list_tables(database: Optional[str] = Field(None, description="Database name
 
 
 def get_table_schema(
-    table: str = Field(..., description="Table name"),
+    tables: list[str] = Field(..., description="List of table names"),
     database: Optional[str] = Field(None, description="Database name"),
-) -> List[ColumnInfo]:
-    """Get the schema (columns) for a specific table."""
-    columns = get_columns(table, database)
-    return [ColumnInfo.from_db_row(col) for col in columns]
+) -> Dict[str, "TableSchema"]:
+    """Get the full schema for multiple tables."""
+    schema_data = get_table_schema_from_db(tables, database)
+    
+    result = {}
+    for table_name, data in schema_data.items():
+        result[table_name] = TableSchema(
+            columns=[ColumnInfo.from_db_row(col) for col in data["columns"]],
+            indexes=[IndexInfo.from_db_row(idx) for idx in data["indexes"]],
+            foreign_keys=[ForeignKeyInfo.from_db_row(fk) for fk in data["foreign_keys"]],
+        )
+    return result
 
 
 def get_table_indexes(
@@ -176,7 +192,7 @@ def get_table_indexes(
     database: Optional[str] = Field(None, description="Database name"),
 ) -> List[IndexInfo]:
     """Get the indexes for a specific table."""
-    indexes = get_indexes(table, database)
+    indexes = get_indexes([table], database)
     return [IndexInfo.from_db_row(idx) for idx in indexes]
 
 
@@ -185,5 +201,5 @@ def get_table_foreign_keys(
     database: Optional[str] = Field(None, description="Database name"),
 ) -> List[ForeignKeyInfo]:
     """Get the foreign keys for a specific table."""
-    foreign_keys = get_foreign_keys(table, database)
+    foreign_keys = get_foreign_keys([table], database)
     return [ForeignKeyInfo.from_db_row(fk) for fk in foreign_keys]

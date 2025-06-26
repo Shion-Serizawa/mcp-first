@@ -46,9 +46,9 @@ def tables(database: Optional[str] = None):
 
 
 @mcp.tool()
-def schema(table: str, database: Optional[str] = None):
-    """Get the schema (columns) for a specific table."""
-    return get_table_schema(table, database)
+def schema(tables: list[str], database: Optional[str] = None):
+    """Get the schema (columns, indexes, foreign keys) for one or more tables."""
+    return get_table_schema(tables, database)
 
 
 @mcp.tool()
