@@ -172,6 +172,8 @@ The server provides the following tools:
 - `databases`: List all databases
 - `tables`: List all tables in a database
 - `schema`: Get the schema (columns, indexes, and foreign keys) for one or more tables.
+- `indexes`: Get the indexes for a specific table
+- `foreign_keys`: Get the foreign keys for a specific table
 
 ## Example
 
