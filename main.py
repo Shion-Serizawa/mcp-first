@@ -26,11 +26,7 @@ from mcp_mysql.tools import (
 
 load_dotenv()
 
-mcp = FastMCP(
-    "MySQL Schema MCP",
-    description="A Metadata Change Proposal (MCP) server for retrieving MySQL schema information",
-    dependencies=["mysql-connector-python", "python-dotenv", "pydantic", "fastmcp"],
-)
+mcp = FastMCP("MySQL Schema MCP")
 
 
 @mcp.tool()
